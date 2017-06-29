@@ -123,15 +123,16 @@ yum install do-agent
 ## Docker
 
 You can optionally run the Agent in Docker. To do so:
+
 `make docker`
 
 In order for the agent to report accurate metrics, you need to bind mount in
 /proc inside the container:
+
 `docker run --rm \
     -v /proc:/agent/proc:ro \
     do-agent
 `
-
 
 ## Plugins
 

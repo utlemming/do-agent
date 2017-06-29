@@ -60,8 +60,26 @@ $(GOVENDOR):
 	@echo ">> fetching govendor"
 	@go get -u github.com/kardianos/govendor
 
-docker: build
+docker:
+	@echo ">> Compiling agent for execution within Alpine Container"
+	mkdir -p build
+	docker build . -f Dockerfile.builder -t agent_builder
+	docker run --rm -i -t \
+		-u $${UID}: \
+		-v $(abspath $(shell git rev-parse --show-toplevel)):/usr/local/go/src/github.com/digitalocean/do-agent \
+		-e CGO=0 \
+		-e GOOS=linux \
+		-e GOARCH=amd64 \
+		-e GOFLAGS=$(GOFLAGS) \
+		-w /usr/local/go/src/github.com/digitalocean/do-agent \
+		agent_builder \
+		make
 	docker build . -t do-agent -t do-agent:$(LAST_RELEASE)
+	@echo ">> NOTICE: builds via Docker will _not_ work natively."
+	@echo ">>         to execute the environment, plese run 'make docker_run'"
+
+docker_run:
+	@docker run --rm -t -v /proc:/agent/proc:ro do-agent:$(LAST_RELEASE)
 
 list-latest-release:
 	@echo $(LAST_RELEASE)
